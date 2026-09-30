@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>कार रेसिंग गेम</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#151515;color:white;
+font-family:Arial;text-align:center}
+h2{margin:12px}
+#score{font-size:20px;margin:8px}
+canvas{background:#444;display:block;
+margin:auto;width:min(100%,360px);height:auto;
+border:3px solid white}
+.controls{display:flex;justify-content:center;
+gap:25px;margin:15px}
+button{font-size:25px;padding:12px 28px;
+border:0;border-radius:12px;background:#16a34a;
+color:white;touch-action: manipulation}
+#restart{font-size:18px;display:none}
+</style>
+</head>
+<body>
+<h2>🏎️ कार रेसिंग</h2>
+<div id="score">अंक: 0</div>
+<canvas id="game" width="360" height="600"></canvas>
+<div class="controls">
+<button id="left">⬅️</button>
+<button id="right">➡️</button>
+</div>
+<button id="restart">फिर से खेलें</button>
+
+<script>
+const c=document.getElementById("game");
+const ctx=c.getContext("2d");
+const scoreBox=document.getElementById("score");
+const restart=document.getElementById("restart");
+
+let player={x:160,y:490,w:40,h:70};
+let enemies=[],score=0,over=false,frame=0;
+let left=false,right=false;
+
+function car(x,y,color){
+ ctx.fillStyle=color;
+ ctx.fillRect(x,y,40,70);
+ ctx.fillStyle="#bdefff";
+ ctx.fillRect(x+6,y+9,28,15);
+ ctx.fillRect(x+6,y+45,28,12);
+ ctx.fillStyle="#111";
+ ctx.fillRect(x-4,y+10,5,17);
+ ctx.fillRect(x+39,y+10,5,17);
+ ctx.fillRect(x-4,y+45,5,17);
+ ctx.fillRect(x+39,y+45,5,17);
+}
+
+function drawRoad(){
+ ctx.fillStyle="#444";
+ ctx.fillRect(0,0,360,600);
+ ctx.fillStyle="#fff";
+ ctx.fillRect(8,0,5,600);
+ ctx.fillRect(347,0,5,600);
+ for(let y=-40;y<600;y+=100){
+  ctx.fillRect(118,y+(frame%100),5,45);
+  ctx.fillRect(238,y+(frame%100),5,45);
+ }
+}
+
+function endGame(){
+ over=true;
+ restart.style.display="inline-block";
+}
+
+function loop(){
+ if(over)return;
+ frame+=5;
+ drawRoad();
+
+ if(left)player.x-=5;
+ if(right)player.x+=5;
+ player.x=Math.max(18,Math.min(302,player.x));
+
+ if(frame%65===0){
+  let lanes=[45,160,275];
+  enemies.push({
+   x:lanes[Math.floor(Math.random()*3)],
+   y:-75
+  });
+ }
+
+ car(player.x,player.y,"#16d9ff");
+
+ for(let e of enemies){
+  e.y+=4+score/250;
+  car(e.x,e.y,"#ff3030");
+
+  if(player.x<e.x+40&&player.x+40>e.x&&
+     player.y<e.y+70&&player.y+70>e.y){
+    endGame();
+  }
+ }
+
+ enemies=enemies.filter(e=>e.y<620);
+ score++;
+ scoreBox.textContent="अंक: "+score;
+ if(!over)requestAnimationFrame(loop);
+}
+
+function start(){
+ player.x=160;enemies=[];score=0;frame=0;
+ over=false;restart.style.display="none";
+ loop();
+}
+
+function control(button,direction){
+ button.addEventListener("pointerdown",e=>{
+  e.preventDefault();
+  if(direction==="left")left=true;
+  else right=true;
+ });
+ button.addEventListener("pointerup",()=>{
+  if(direction==="left")left=false;
+  else right=false;
+ });
+ button.addEventListener("pointerleave",()=>{
+  if(direction==="left")left=false;
+  else right=false;
+ });
+}
+
+control(document.getElementById("left"),"left");
+control(document.getElementById("right"),"right");
+restart.addEventListener("click",start);
+start();
+</script>
+</body>
+</html>
